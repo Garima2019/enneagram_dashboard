@@ -225,7 +225,7 @@ async function loadQuestionnaire() {
   showPanel('loading-screen');
   try {
     // Try hitting local express API first
-    const response = await fetch('/api/questions');
+    const response = await fetch(`${window.location.origin}/api/questions`);
     if (!response.ok) throw new Error('Express API failed');
     const result = await response.json();
     if (!result.success) throw new Error(result.error);
@@ -234,7 +234,7 @@ async function loadQuestionnaire() {
     console.warn('API fetch failed, falling back to reading markdown file directly from root...', error);
     try {
       // Direct file fallback (if running statically via file:// or another static server)
-      const mdResponse = await fetch('/Enneagram_Questionnaire_By_Type.md');
+      const mdResponse = await fetch(`${window.location.origin}/Enneagram_Questionnaire_By_Type.md`);
       if (!mdResponse.ok) throw new Error('Failed to fetch markdown file.');
       const mdText = await mdResponse.text();
       state.allQuestionsByType = parseMarkdownClient(mdText);
@@ -1200,7 +1200,7 @@ async function sendEmailReport() {
   }));
 
   try {
-    const response = await fetch('/api/send-report', {
+    const response = await fetch(`${window.location.origin}/api/send-report`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
