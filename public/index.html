@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Interactive Enneagram Dashboard</title>
+  
+  <!-- SEO Meta Tags -->
+  <meta name="description" content="Discover your personality archetype with this interactive Enneagram dashboard. A multi-stage personality assessment with visual charting, deep-dive adaptive testing, and comprehensive reporting.">
+  <meta name="keywords" content="Enneagram, Personality Test, Interactive Dashboard, Psychology, Archetypes, Self Discovery">
+  <meta name="author" content="Enneagram Projects">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- Background Elements for Visual Depth -->
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+  <div class="blob blob-3"></div>
+
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="brand">
+        <div class="brand-icon">
+          <i data-lucide="compass" class="icon-brand"></i>
+        </div>
+        <div class="brand-text">
+          <h1>Ennea<span>Scope</span></h1>
+          <p>Interactive Enneagram Assessment & Analytics</p>
+        </div>
+      </div>
+      
+      <div class="header-actions">
+        <button id="theme-toggle" class="btn-icon" title="Toggle Theme" aria-label="Toggle Theme">
+          <i data-lucide="sun" class="sun-icon"></i>
+          <i data-lucide="moon" class="moon-icon"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- Progress Indicator & Wizard Navigation -->
+    <nav class="wizard-steps" id="wizard-steps-nav" style="display: none;">
+      <div class="step-indicator active" id="step-1-indicator">
+        <div class="step-num">1</div>
+        <div class="step-label">Baseline</div>
+      </div>
+      <div class="step-line" id="step-line-1"></div>
+      <div class="step-indicator" id="step-2-indicator">
+        <div class="step-num">2</div>
+        <div class="step-label">Deep Dive</div>
+      </div>
+      <div class="step-line" id="step-line-2"></div>
+      <div class="step-indicator" id="step-3-indicator">
+        <div class="step-num">3</div>
+        <div class="step-label">Results</div>
+      </div>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      
+      <!-- LOADING SCREEN -->
+      <section id="loading-screen" class="view-panel active">
+        <div class="loader-content">
+          <div class="spinner"></div>
+          <h2>Initializing Questionnaire...</h2>
+          <p>Parsing questionnaire files and preparing your experience.</p>
+        </div>
+      </section>
+
+      <!-- GDPR DATA STORAGE AND PRIVACY CONSENT -->
+      <section id="consent-stage" class="view-panel">
+        <div class="consent-card">
+          <div class="consent-icon">
+            <i data-lucide="shield-check" class="shield-icon"></i>
+          </div>
+          <h2>Data Storage & Privacy Consent</h2>
+          <p class="subtitle">Please review and accept our data policy as per General Data Protection Regulation (GDPR) before starting the assessment.</p>
+          
+          <div class="consent-details">
+            <div class="consent-item">
+              <i data-lucide="database"></i>
+              <div>
+                <h4>Local Progress Storage</h4>
+                <p>Your assessment progress and rating inputs are stored locally on your browser. This data remains on your machine and you can resume the test at any point.</p>
+              </div>
+            </div>
+            <div class="consent-item">
+              <i data-lucide="mail"></i>
+              <div>
+                <h4>Secure Emailing</h4>
+                <p>If you request an emailed report, your email and assessment scores are transmitted securely. Your email is only used for report delivery.</p>
+              </div>
+            </div>
+            <div class="consent-item">
+              <i data-lucide="file-text"></i>
+              <div>
+                <h4>Server-Side Backups</h4>
+                <p>Generated report HTML files are temporarily saved on the server in a secure 'reports' folder for archival and debugging purposes. No marketing profiles are built.</p>
+              </div>
+            </div>
+          </div>
+
+          <form id="consent-form">
+            <div class="consent-checkbox-wrapper">
+              <input type="checkbox" id="consent-checkbox" required>
+              <label for="consent-checkbox">
+                I explicitly agree to the storage of my responses, test progress, and email address for generating and delivering my custom Enneagram personality profile report.
+              </label>
+            </div>
+            
+            <button type="submit" class="btn btn-primary" id="consent-proceed-btn" disabled>
+              <span>Accept & Begin Assessment</span>
+              <i data-lucide="arrow-right"></i>
+            </button>
+          </form>
+        </div>
+      </section>
+
+      <!-- STAGE 1: BASELINE QUESTIONS -->
+      <section id="baseline-stage" class="view-panel">
+        <div class="panel-header">
+          <div class="header-content">
+            <span class="badge">Stage 1 of 3</span>
+            <h2>Baseline Enneagram Questionnaire</h2>
+            <p>To begin, respond to these initial 36 questions (4 random questions per Enneagram type from the file). Be as honest as possible with yourself.</p>
+          </div>
+          <div class="progress-bar-container">
+            <div class="progress-info">
+              <span>Overall Progress</span>
+              <span id="baseline-progress-text">0% (0 of 36)</span>
+            </div>
+            <div class="progress-track">
+              <div id="baseline-progress-fill" class="progress-fill" style="width: 0%;"></div>
+            </div>
+          </div>
+        </div>
+
+        <form id="baseline-form" class="questionnaire-form">
+          <div class="questions-grid" id="baseline-questions-container">
+            <!-- Questions injected here by JS -->
+          </div>
+          
+          <div class="action-bar" style="justify-content: space-between;">
+            <button type="button" class="btn btn-outline" id="baseline-back-btn" disabled>
+              <i data-lucide="arrow-left"></i>
+              <span>Back</span>
+            </button>
+            <p class="error-msg" id="baseline-error"></p>
+            <button type="button" class="btn btn-primary" id="baseline-next-btn">
+              <span>Next</span>
+              <i data-lucide="arrow-right"></i>
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <!-- STAGE 2: TRANSITION & DEEP DIVE INTERMISSION -->
+      <section id="transition-stage" class="view-panel">
+        <div class="transition-card">
+          <div class="transition-icon">
+            <i data-lucide="sparkles" class="pulsing-icon"></i>
+          </div>
+          <h2>Analyzing Preliminary Results...</h2>
+          <p>Based on your responses, we've identified potential dominant personality types. To refine your matches and ensure precision, we are dynamically injecting deep dive questions for your highest-scoring type(s).</p>
+          
+          <div class="top-types-preview" id="top-types-preview-container">
+            <!-- Preliminary top types shown here -->
+          </div>
+
+          <button id="start-deep-dive-btn" class="btn btn-primary">
+            <span>Proceed to Deep Dive</span>
+            <i data-lucide="shield-question"></i>
+          </button>
+        </div>
+      </section>
+
+      <!-- STAGE 3: DEEP DIVE QUESTIONS -->
+      <section id="deep-dive-stage" class="view-panel">
+        <div class="panel-header">
+          <span class="badge">Stage 2 of 3</span>
+          <h2>Deep Dive Assessment</h2>
+          <p id="deep-dive-description">We have injected 5 additional sequential questions exclusive to your highest scoring type to confirm your Enneagram profile.</p>
+          
+          <div class="progress-bar-container">
+            <div class="progress-info">
+              <span>Deep Dive Progress</span>
+              <span id="deep-dive-progress-text">0% (0 of 5)</span>
+            </div>
+            <div class="progress-track">
+              <div id="deep-dive-progress-fill" class="progress-fill" style="width: 0%;"></div>
+            </div>
+          </div>
+        </div>
+
+        <form id="deep-dive-form" class="questionnaire-form">
+          <div class="questions-grid" id="deep-dive-questions-container">
+            <!-- Questions injected here by JS -->
+          </div>
+          
+          <div class="action-bar" style="justify-content: space-between;">
+            <button type="button" class="btn btn-outline" id="deep-dive-back-btn" disabled>
+              <i data-lucide="arrow-left"></i>
+              <span>Back</span>
+            </button>
+            <p class="error-msg" id="deep-dive-error"></p>
+            <button type="button" class="btn btn-primary" id="deep-dive-next-btn">
+              <span>Next</span>
+              <i data-lucide="arrow-right"></i>
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <!-- STAGE 4 & 5: RESULTS DASHBOARD -->
+      <section id="results-stage" class="view-panel">
+        <div class="results-grid">
+          
+          <!-- Primary Dominant Type Panel -->
+          <div class="dominant-type-card">
+            <span class="section-title">Your Primary Personality Profile</span>
+            <div class="dominant-header">
+              <div class="dominant-badge">
+                <span class="label">Type</span>
+                <span class="number" id="dominant-type-number">-</span>
+              </div>
+              <div class="dominant-titles">
+                <h2 id="dominant-type-title">The Archetype</h2>
+                <h3 id="dominant-type-subtitle">The Core Focus</h3>
+              </div>
+            </div>
+            
+            <p class="dominant-desc" id="dominant-type-desc">
+              Your results are being computed...
+            </p>
+            
+            <div class="traits-container">
+              <h4>Key Traits</h4>
+              <div class="traits-badges" id="dominant-traits">
+                <!-- Badges injected by JS -->
+              </div>
+            </div>
+
+            <div class="orientation-bar">
+              <i data-lucide="compass"></i>
+              <div>
+                <strong>Core Orientation:</strong>
+                <span id="dominant-orientation">-</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Chart Visualization Card -->
+          <div class="chart-card">
+            <div class="chart-header">
+              <h3>Type Distribution Analysis</h3>
+              <div class="chart-toggles">
+                <button class="btn-toggle active" id="btn-chart-radar" title="Radar Chart">
+                  <i data-lucide="radar"></i> Radar
+                </button>
+                <button class="btn-toggle" id="btn-chart-bar" title="Bar Chart">
+                  <i data-lucide="bar-chart-3"></i> Bar
+                </button>
+              </div>
+            </div>
+            <div class="chart-wrapper">
+              <canvas id="enneagramChart"></canvas>
+            </div>
+          </div>
+
+          <!-- All 9 Types Match Breakdown List -->
+          <div class="all-types-card">
+            <h3>Complete Type Similarity Match</h3>
+            <p class="info-text">Scores represent your rating alignment across each type (1-5 normalized to a percentage scale).</p>
+            <div class="types-bar-list" id="types-breakdown-list">
+              <!-- Grid items injected by JS -->
+            </div>
+          </div>
+
+          <!-- Email Report Module -->
+          <div class="report-card">
+            <div class="report-icon">
+              <i data-lucide="mail"></i>
+            </div>
+            <h3>Email Your Full Report</h3>
+            <p>Get a comprehensive breakdown of your Enneagram profile, including all answered questions, rating details, and a high-resolution summary sent directly to your inbox.</p>
+            
+            <form id="email-report-form">
+              <div class="form-group">
+                <div class="input-with-icon">
+                  <i data-lucide="mail"></i>
+                  <input type="email" id="user-email" placeholder="enter your email address (e.g. name@example.com)" required>
+                </div>
+              </div>
+              <button type="submit" class="btn btn-secondary w-full" id="send-report-btn">
+                <span>Send Report</span>
+                <i data-lucide="send"></i>
+              </button>
+            </form>
+            <p class="status-msg" id="report-status"></p>
+          </div>
+
+          <!-- Question Details Accordion -->
+          <div class="answers-review-card">
+            <button class="accordion-header" id="btn-toggle-answers">
+              <span id="answers-accordion-title">Review Your Responses</span>
+              <i data-lucide="chevron-down" class="accordion-arrow"></i>
+            </button>
+            <div class="accordion-content" id="answers-accordion-content">
+              <div class="answers-list" id="answers-review-list">
+                <!-- User responses injected here -->
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="results-actions">
+          <button id="btn-restart" class="btn btn-outline">
+            <i data-lucide="rotate-ccw"></i>
+            <span>Restart Assessment</span>
+          </button>
+          <button id="btn-download-pdf" class="btn btn-outline">
+            <i data-lucide="download"></i>
+            <span>Download Report (HTML)</span>
+          </button>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- App Footer -->
+    <footer class="app-footer">
+      <p>Interactive Enneagram Dashboard &copy; 2026. Made with precision and modern analytics.</p>
+    </footer>
+  </div>
+
+  <!-- Toast Notification System -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- JS Entrypoint -->
+  <script src="app.js"></script>
+</body>
+</html>

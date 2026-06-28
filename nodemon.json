@@ -1,0 +1,5 @@
+{
+  "watch": ["server.js", ".env", "Enneagram_Questionnaire_By_Type.md"],
+  "ext": "js,json,md,env",
+  "delay": "500"
+}
