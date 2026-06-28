@@ -263,11 +263,14 @@ app.post('/api/send-report', async (req, res) => {
     transportConfig = {
       host: smtpHost,
       port: parseInt((process.env.SMTP_PORT || '587').toString().trim(), 10),
-      secure: (process.env.SMTP_SECURE || '').toString().trim() === 'true',
+      secure: process.env.SMTP_SECURE === 'true',
       auth: {
         user: smtpUser,
         pass: smtpPass
-      }
+      },
+      connectionTimeout: 10000, // 10 seconds to avoid hanging in production
+      greetingTimeout: 10000,   // 10 seconds to avoid hanging in production
+      socketTimeout: 10000      // 10 seconds to avoid hanging in production
     };
   }
 
@@ -306,7 +309,7 @@ app.post('/api/send-report', async (req, res) => {
       });
     } catch (err) {
       console.error('❌ Error sending real email via SMTP:', err);
-      return res.json({
+      return res.status(500).json({
         success: false,
         message: `Failed to send email: ${err.message}`,
         savedLocal: true,
