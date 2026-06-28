@@ -1,7 +1,7 @@
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
-const nodemailer = require('nodemailer');
+// const nodemailer = require('nodemailer');
 const cors = require('cors');
 require('dotenv').config();
 
@@ -252,27 +252,9 @@ app.post('/api/send-report', async (req, res) => {
     </html>
   `;
 
-  // Create SMTP transporter if configured
-  const smtpHost = process.env.SMTP_HOST ? process.env.SMTP_HOST.trim() : '';
-  const smtpUser = process.env.SMTP_USER ? process.env.SMTP_USER.trim() : '';
-  const smtpPass = process.env.SMTP_PASS ? process.env.SMTP_PASS.trim() : '';
-  const useSmtp = smtpHost && smtpUser && smtpPass;
-  
-  let transportConfig;
-  if (useSmtp) {
-    transportConfig = {
-      host: smtpHost,
-      port: parseInt((process.env.SMTP_PORT || '587').toString().trim(), 10),
-      secure: process.env.SMTP_SECURE === 'true',
-      auth: {
-        user: smtpUser,
-        pass: smtpPass
-      },
-      connectionTimeout: 10000, // 10 seconds to avoid hanging in production
-      greetingTimeout: 10000,   // 10 seconds to avoid hanging in production
-      socketTimeout: 10000      // 10 seconds to avoid hanging in production
-    };
-  }
+  // Get Brevo API Key
+  const brevoApiKey = (process.env.BREVO_API_KEY || process.env.SMTP_PASS || '').trim();
+  const useApi = !!brevoApiKey;
 
   // Create reports folder if not exists
   const reportsDir = path.join(__dirname, 'reports');
@@ -285,22 +267,55 @@ app.post('/api/send-report', async (req, res) => {
   const reportPath = path.join(reportsDir, reportFilename);
   fs.writeFileSync(reportPath, emailHtml, 'utf-8');
 
-  if (useSmtp) {
-    console.log(`[Email Request] Attempting to send real SMTP email...`);
+  if (useApi) {
+    const fromEnv = process.env.EMAIL_FROM || '"Enneagram Dashboard" <no-reply@example.com>';
+    let senderName = 'Enneagram Dashboard';
+    let senderEmail = 'no-reply@example.com';
+    
+    const fromMatch = fromEnv.match(/"?([^"<]+)"?\s*<([^>]+)>/);
+    if (fromMatch) {
+      senderName = fromMatch[1].trim();
+      senderEmail = fromMatch[2].trim();
+    } else {
+      senderEmail = fromEnv.trim();
+    }
+
+    console.log(`[Email Request] Attempting to send real email via Brevo REST API...`);
     console.log(`[Email Request] To: ${email}`);
-    console.log(`[Email Request] Via Host: ${smtpHost}:${process.env.SMTP_PORT || '587'}`);
+    console.log(`[Email Request] From: "${senderName}" <${senderEmail}>`);
     console.log(`[Email Request] Report HTML saved to local backup: ${reportPath}`);
     
     try {
-      const transporter = nodemailer.createTransport(transportConfig);
-      await transporter.sendMail({
-        from: process.env.EMAIL_FROM || '"Enneagram Dashboard" <no-reply@example.com>',
-        to: email,
-        subject: `Your Enneagram Personality Report: Type ${dominantType} — ${profile.title}`,
-        html: emailHtml
+      const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+        method: 'POST',
+        headers: {
+          'accept': 'application/json',
+          'api-key': brevoApiKey,
+          'content-type': 'application/json'
+        },
+        body: JSON.stringify({
+          sender: {
+            name: senderName,
+            email: senderEmail
+          },
+          to: [
+            {
+              email: email,
+              name: email.split('@')[0]
+            }
+          ],
+          subject: `Your Enneagram Personality Report: Type ${dominantType} — ${profile.title}`,
+          htmlContent: emailHtml
+        })
       });
 
-      console.log(`[Email Success] Email successfully sent to ${email}`);
+      const responseBody = await response.json().catch(() => ({}));
+      
+      if (!response.ok) {
+        throw new Error(responseBody.message || `HTTP error ${response.status}`);
+      }
+
+      console.log(`[Email Success] Email successfully sent to ${email} (Message ID: ${responseBody.messageId || 'N/A'})`);
       return res.json({
         success: true,
         message: 'Report sent successfully via email!',
@@ -308,7 +323,7 @@ app.post('/api/send-report', async (req, res) => {
         localFile: reportFilename
       });
     } catch (err) {
-      console.error('❌ Error sending real email via SMTP:', err);
+      console.error('❌ Error sending real email via Brevo REST API:', err);
       return res.status(500).json({
         success: false,
         message: `Failed to send email: ${err.message}`,
@@ -319,7 +334,7 @@ app.post('/api/send-report', async (req, res) => {
     }
   } else {
     // Return mock success with instructions
-    console.log(`[Mock Mode] Email sending skipped (SMTP not configured).`);
+    console.log(`[Mock Mode] Email sending skipped (Brevo API key not configured).`);
     console.log(`[Mock Mode] To: ${email}`);
     console.log(`[Mock Mode] Report HTML saved to: ${reportPath}`);
     
@@ -344,20 +359,15 @@ app.listen(PORT, () => {
   console.log(`Enneagram Dashboard server is running on port ${PORT}`);
   console.log(`URL: http://localhost:${PORT}`);
   
-  const smtpHost = process.env.SMTP_HOST ? process.env.SMTP_HOST.trim() : '';
-  const smtpUser = process.env.SMTP_USER ? process.env.SMTP_USER.trim() : '';
-  const smtpPass = process.env.SMTP_PASS ? process.env.SMTP_PASS.trim() : '';
-  const useSmtp = smtpHost && smtpUser && smtpPass;
+  const brevoApiKey = (process.env.BREVO_API_KEY || process.env.SMTP_PASS || '').trim();
+  const useApi = !!brevoApiKey;
   
-  if (useSmtp) {
-    console.log(`SMTP Status: ENABLED`);
-    console.log(`SMTP Host:   ${smtpHost}`);
-    console.log(`SMTP Port:   ${process.env.SMTP_PORT || '587'}`);
-    console.log(`SMTP User:   ${smtpUser}`);
-    console.log(`SMTP Secure: ${process.env.SMTP_SECURE || 'false'}`);
+  if (useApi) {
+    console.log(`Email API Status: ENABLED (Brevo REST API)`);
+    console.log(`Sender Email:     ${process.env.EMAIL_FROM || 'no-reply@example.com'}`);
   } else {
-    console.log(`SMTP Status: DISABLED (Running in local Mock Mode)`);
-    console.log(`Missing variables: ${[!smtpHost && 'SMTP_HOST', !smtpUser && 'SMTP_USER', !smtpPass && 'SMTP_PASS'].filter(Boolean).join(', ')}`);
+    console.log(`Email API Status: DISABLED (Running in local Mock Mode)`);
+    console.log(`Missing variables: BREVO_API_KEY (or SMTP_PASS)`);
   }
   console.log(`==================================================`);
 });
