@@ -1,8 +1,8 @@
 // Enneagram Dashboard Application State
 const state = {
   allQuestionsByType: null, // Full questions library grouped by type
-  baselineQuestions: [],    // The 20 questions selected for Stage 1
-  deepDiveQuestions: [],    // The 5 questions injected for Stage 3
+  baselineQuestions: [],    // The questions selected for Stage 1
+  deepDiveQuestions: [],    // The deep-dive questions injected for Stage 3
   topTypes: [],             // Highest scoring types from Stage 2
   answers: {},              // Store answers: { questionNumber: rating }
   chartInstance: null,      // Chart.js chart reference
@@ -439,6 +439,11 @@ function parseMarkdownClient(mdText) {
       const originalNum = parseInt(questionMatch[1], 10);
       let text = questionMatch[2].trim();
       text = text.replace(/^(Statement\s+\d+[\s.:-]*|\bStatement\b[\s.:-]*)/i, '').trim();
+
+      // Filter out non-Likert placeholder/scenario questions from library
+      if (text.includes('(scenario question)') || text.includes('(seek compromise')) {
+        continue;
+      }
 
       types[currentTypeNum].questions.push({
         originalNumber: originalNum,
@@ -894,7 +899,7 @@ function renderDeepDiveQuestions() {
   // Update description header with types
   const typesText = state.topTypes.map(t => `Type ${t} (${TYPE_PROFILES[t].title})`).join(' and ');
   document.getElementById('deep-dive-description').innerHTML = 
-    `We have dynamically injected 5 additional sequential questions exclusive to <strong>${typesText}</strong> from the questionnaire file to verify your profile structure.`;
+    `We have dynamically injected ${state.deepDiveQuestions.length} additional sequential questions exclusive to <strong>${typesText}</strong> from the questionnaire file to verify your profile structure.`;
 
   const index = state.currentDeepDiveIndex;
   const q = state.deepDiveQuestions[index];
@@ -1188,8 +1193,8 @@ function handleBaselineSubmit() {
     return;
   }
 
-  // Calculate preliminary type scores
-  const prelimScores = calculateScores();
+  // Calculate preliminary type scores without contrast enhancement to identify real raw ties
+  const prelimScores = calculateScores(false);
   
   // Find highest score
   let maxScore = -1;
@@ -1197,10 +1202,10 @@ function handleBaselineSubmit() {
     if (score > maxScore) maxScore = score;
   });
 
-  // Find all types matching max score (handling ties)
+  // Find all types matching max score (handling ties with precision epsilon)
   const topTypes = [];
   Object.entries(prelimScores).forEach(([typeNum, score]) => {
-    if (score === maxScore) {
+    if (Math.abs(score - maxScore) < 1e-7) {
       topTypes.push(parseInt(typeNum, 10));
     }
   });
@@ -1390,7 +1395,7 @@ function validateDeepDiveAnswers() {
 }
 
 // Calculate type scores (averages of answered questions per type)
-function calculateScores() {
+function calculateScores(enhanced = true) {
   const typeSums = {};
   const typeCounts = {};
   const ratingCounts = {};
@@ -1402,22 +1407,13 @@ function calculateScores() {
     ratingCounts[t] = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
   }
 
-  // Iterate over all answered baseline and deep dive questions
+  // Iterate over all answered baseline and deep dive questions (except the scenario question 999 first)
   const allAskedQuestions = [...state.baselineQuestions, ...state.deepDiveQuestions];
   
   allAskedQuestions.forEach(q => {
-    const rating = state.answers[q.originalNumber];
-    if (rating !== undefined) {
-      if (q.originalNumber === 999) {
-        // Option 'A' maps to type 1, 'B' to type 2, etc.
-        const selectedType = rating.charCodeAt(0) - 'A'.charCodeAt(0) + 1;
-        for (let t = 1; t <= 9; t++) {
-          const score = (t === selectedType) ? 5 : 1;
-          typeSums[t] += score;
-          typeCounts[t] += 1;
-          ratingCounts[t][score] += 1;
-        }
-      } else {
+    if (q.originalNumber !== 999) {
+      const rating = state.answers[q.originalNumber];
+      if (rating !== undefined) {
         typeSums[q.typeNumber] += rating;
         typeCounts[q.typeNumber] += 1;
         ratingCounts[q.typeNumber][rating] += 1;
@@ -1425,31 +1421,65 @@ function calculateScores() {
     }
   });
 
-  // Calculate raw averages and find dominant type using tie-breaker
+  // Calculate raw averages from standard baseline/deep-dive questions
   const rawAverages = {};
+  for (let t = 1; t <= 9; t++) {
+    rawAverages[t] = typeCounts[t] > 0 ? (typeSums[t] / typeCounts[t]) : 0;
+  }
+
+  // Inject the scenario question score exclusively to its corresponding Enneagram type
+  const scenarioRating = state.answers[999];
+  if (scenarioRating !== undefined) {
+    const selectedType = scenarioRating.charCodeAt(0) - 'A'.charCodeAt(0) + 1;
+    if (selectedType >= 1 && selectedType <= 9) {
+      const weight = 2.0; // Heavily weighted factor exclusively applied
+      typeSums[selectedType] += 5.0 * weight;
+      typeCounts[selectedType] += weight;
+      ratingCounts[selectedType][5] += weight;
+      
+      // Update rawAverage for the selected type
+      rawAverages[selectedType] = typeSums[selectedType] / typeCounts[selectedType];
+    }
+  }
+
+  if (!enhanced) {
+    return rawAverages;
+  }
+
+  // Calculate raw averages and find dominant type using tie-breaker
+  const tieBrokenScores = {};
   let maxTieBrokenScore = -1;
-  let dominantType = 1;
+  let candidates = [];
 
   for (let t = 1; t <= 9; t++) {
-    const rawAvg = typeCounts[t] > 0 ? (typeSums[t] / typeCounts[t]) : 0;
-    rawAverages[t] = rawAvg;
-
-    // Tie-breaker based purely on explicit inputs: weight higher ratings (5s, 4s, 3s)
-    // This ensures distinct, exact averages where the true dominant type emerges
+    const rawAvg = rawAverages[t];
     const num5 = ratingCounts[t][5] || 0;
     const num4 = ratingCounts[t][4] || 0;
     const num3 = ratingCounts[t][3] || 0;
     const tieBreaker = (num5 * 1e-4) + (num4 * 1e-5) + (num3 * 1e-6);
     
     const tbScore = rawAvg + tieBreaker;
+    tieBrokenScores[t] = tbScore;
+    
     if (tbScore > maxTieBrokenScore) {
       maxTieBrokenScore = tbScore;
-      dominantType = t;
+      candidates = [t];
+    } else if (Math.abs(tbScore - maxTieBrokenScore) < 1e-9) {
+      candidates.push(t);
     }
   }
 
-  // Apply exponential contrast enhancement scaling (satisfying Request 1)
-  // but using the tie-broken scores so dominant type stands out and ties are resolved
+  // Deterministic, unbiased resolution of ties using a hash of all answers:
+  let dominantType = 1;
+  if (candidates.length > 0) {
+    const answersHash = Object.entries(state.answers).reduce((sum, [qNum, val]) => {
+      const code = typeof val === 'number' ? val : val.charCodeAt(0);
+      return sum + parseInt(qNum) * code;
+    }, 0);
+    dominantType = candidates[answersHash % candidates.length];
+  }
+
+  // Apply exponential contrast enhancement scaling
   const k = 1.2;
   const scores = {};
   const maxRawAvg = rawAverages[dominantType];
@@ -1463,7 +1493,6 @@ function calculateScores() {
       scores[t] = rawAvg;
     } else {
       // Runner-ups are exponentially decayed relative to their distance from the top.
-      // If there was a raw tie, the runner-up is decayed slightly so it doesn't cluster at the top.
       const rawDiff = maxRawAvg - rawAvg;
       const effectiveDiff = rawDiff === 0 ? 0.05 : rawDiff;
       scores[t] = rawAvg * Math.exp(-k * effectiveDiff);
