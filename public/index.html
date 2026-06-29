@@ -141,7 +141,7 @@
           <div class="progress-bar-container">
             <div class="progress-info">
               <span>Overall Progress</span>
-              <span id="baseline-progress-text">0% (0 of 36)</span>
+              <span id="baseline-progress-text">0% (0 of 37)</span>
             </div>
             <div class="progress-track">
               <div id="baseline-progress-fill" class="progress-fill" style="width: 0%;"></div>
@@ -227,117 +227,258 @@
 
       <!-- STAGE 4 & 5: RESULTS DASHBOARD -->
       <section id="results-stage" class="view-panel">
-        <div class="results-grid">
+        <div class="results-layout" style="justify-content: center;">
           
-          <!-- Primary Dominant Type Panel -->
-          <div class="dominant-type-card">
-            <span class="section-title">Your Primary Personality Profile</span>
-            <div class="dominant-header">
-              <div class="dominant-badge">
-                <span class="label">Type</span>
-                <span class="number" id="dominant-type-number">-</span>
-              </div>
-              <div class="dominant-titles">
-                <h2 id="dominant-type-title">The Archetype</h2>
-                <h3 id="dominant-type-subtitle">The Core Focus</h3>
-              </div>
-            </div>
+          <!-- Wrapped in report-document with max-width and centering styles -->
+          <div class="report-document" style="max-width: 650px; width: 100%; flex: none;">
             
-            <p class="dominant-desc" id="dominant-type-desc">
-              Your results are being computed...
-            </p>
-            
-            <div class="traits-container">
-              <h4>Key Traits</h4>
-              <div class="traits-badges" id="dominant-traits">
-                <!-- Badges injected by JS -->
-              </div>
-            </div>
-
-            <div class="orientation-bar">
-              <i data-lucide="compass"></i>
-              <div>
-                <strong>Core Orientation:</strong>
-                <span id="dominant-orientation">-</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Chart Visualization Card -->
-          <div class="chart-card">
-            <div class="chart-header">
-              <h3>Type Distribution Analysis</h3>
-              <div class="chart-toggles">
-                <button class="btn-toggle active" id="btn-chart-radar" title="Radar Chart">
-                  <i data-lucide="radar"></i> Radar
-                </button>
-                <button class="btn-toggle" id="btn-chart-bar" title="Bar Chart">
-                  <i data-lucide="bar-chart-3"></i> Bar
-                </button>
-              </div>
-            </div>
-            <div class="chart-wrapper">
-              <canvas id="enneagramChart"></canvas>
-            </div>
-          </div>
-
-          <!-- All 9 Types Match Breakdown List -->
-          <div class="all-types-card">
-            <h3>Complete Type Similarity Match</h3>
-            <p class="info-text">Scores represent your rating alignment across each type (1-5 normalized to a percentage scale).</p>
-            <div class="types-bar-list" id="types-breakdown-list">
-              <!-- Grid items injected by JS -->
-            </div>
-          </div>
-
-          <!-- Email Report Module -->
-          <div class="report-card">
-            <div class="report-icon">
-              <i data-lucide="mail"></i>
-            </div>
-            <h3>Email Your Full Report</h3>
-            <p>Get a comprehensive breakdown of your Enneagram profile, including all answered questions, rating details, and a high-resolution summary sent directly to your inbox.</p>
-            
-            <form id="email-report-form">
-              <div class="form-group">
-                <div class="input-with-icon">
-                  <i data-lucide="mail"></i>
-                  <input type="email" id="user-email" placeholder="enter your email address (e.g. name@example.com)" required>
+            <!-- Primary Dominant Type Panel -->
+            <div class="dominant-type-card">
+              <span class="section-title">Your Primary Personality Profile</span>
+              <div class="dominant-header">
+                <div class="dominant-badge">
+                  <span class="label">Type</span>
+                  <span class="number" id="dominant-type-number">-</span>
+                </div>
+                <div class="dominant-titles">
+                  <h2 id="dominant-type-title">The Archetype</h2>
+                  <h3 id="dominant-type-subtitle">The Core Focus</h3>
                 </div>
               </div>
-              <button type="submit" class="btn btn-secondary w-full" id="send-report-btn">
-                <span>Send Report</span>
-                <i data-lucide="send"></i>
-              </button>
-            </form>
-            <p class="status-msg" id="report-status"></p>
-          </div>
+              
+              <p class="dominant-desc" id="dominant-type-desc">
+                Your results are being computed...
+              </p>
+              
+              <div class="traits-container">
+                <h4>Key Traits</h4>
+                <div class="traits-badges" id="dominant-traits">
+                  <!-- Badges injected by JS -->
+                </div>
+              </div>
 
-          <!-- Question Details Accordion -->
-          <div class="answers-review-card">
-            <button class="accordion-header" id="btn-toggle-answers">
-              <span id="answers-accordion-title">Review Your Responses</span>
-              <i data-lucide="chevron-down" class="accordion-arrow"></i>
-            </button>
-            <div class="accordion-content" id="answers-accordion-content">
-              <div class="answers-list" id="answers-review-list">
-                <!-- User responses injected here -->
+              <div class="orientation-bar">
+                <i data-lucide="compass"></i>
+                <div>
+                  <strong>Core Orientation:</strong>
+                  <span id="dominant-orientation">-</span>
+                </div>
               </div>
             </div>
-          </div>
 
-        </div>
+            <!-- Email Report Section & Restart Button -->
+            <div class="report-section-card report-card" id="email-report-card" style="margin-top: 24px; padding: 24px; text-align: center; border: 1px solid var(--bg-card-border); border-radius: 16px; background: rgba(99, 102, 241, 0.03);">
+              <div class="report-icon" style="margin-bottom: 12px; display: inline-flex; align-items: center; justify-content: center; width: 48px; height: 48px; border-radius: 12px; background: var(--secondary-gradient); color: white;">
+                <i data-lucide="mail" style="width: 24px; height: 24px;"></i>
+              </div>
+              <h3 style="margin-top: 12px; font-size: 18px; font-weight: 700;">Receive Full Analysis PDF</h3>
+              <p style="font-size: 13px; color: var(--text-secondary); margin: 8px 0 16px 0; line-height: 1.5;">Enter your email to receive a comprehensive PDF breakdown including your personality summary, motivations, arrows, wings, and detailed next steps.</p>
+              <form id="email-report-form">
+                <div class="form-group">
+                  <div class="input-with-icon">
+                    <i data-lucide="mail"></i>
+                    <input type="email" id="user-email" placeholder="your.email@example.com" required style="width: 100%;">
+                  </div>
+                </div>
+                <button type="submit" class="btn btn-primary" id="send-report-btn" style="margin-top: 12px; width: 100%;">
+                  <span>Email My Report</span>
+                  <i data-lucide="send"></i>
+                </button>
+              </form>
+              <p id="report-status" class="status-msg" style="margin-top: 12px; font-size: 13px; font-weight: 600;"></p>
+              
+              <button id="btn-restart" class="btn btn-outline" style="margin-top: 24px; width: 100%; border-color: var(--bg-card-border); color: var(--text-secondary);">
+                <i data-lucide="rotate-ccw" style="width: 16px; height: 16px; margin-right: 8px;"></i>
+                <span>Restart Assessment</span>
+              </button>
+            </div>
 
-        <div class="results-actions">
-          <button id="btn-restart" class="btn btn-outline">
-            <i data-lucide="rotate-ccw"></i>
-            <span>Restart Assessment</span>
-          </button>
-          <button id="btn-download-pdf" class="btn btn-outline">
-            <i data-lucide="download"></i>
-            <span>Download Report (HTML)</span>
-          </button>
-        </div>
+            <!-- Hidden Cards (Still in DOM for JS updates, but hidden from UI) -->
+            <!-- 'Your Core Motivations' Card -->
+            <div class="report-section-card" id="report-motivations-card" style="display: none !important;">
+              <h3 class="report-section-header"><i data-lucide="sparkles"></i> Your Core Motivations</h3>
+              <div class="motivations-grid">
+                <div class="motivation-item">
+                  <strong>Key Drivers</strong>
+                  <p id="mot-key-drivers">-</p>
+                </div>
+                <div class="motivation-item">
+                  <strong>Biggest Fear</strong>
+                  <p id="mot-biggest-fear">-</p>
+                </div>
+                <div class="motivation-item">
+                  <strong>Core Values</strong>
+                  <p id="mot-core-values">-</p>
+                </div>
+                <div class="motivation-item">
+                  <strong>Decision-Making Style</strong>
+                  <p id="mot-decision-making">-</p>
+                </div>
+                <div class="motivation-item">
+                  <strong>Stress Reactions</strong>
+                  <p id="mot-stress-reactions">-</p>
+                </div>
+                <div class="motivation-item">
+                  <strong>Security Triggers</strong>
+                  <p id="mot-security-triggers">-</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- 'Core Personality Summary' Card -->
+            <div class="report-section-card" id="report-summary-card" style="display: none !important;">
+              <h3 class="report-section-header"><i data-lucide="book-open"></i> Core Personality Summary</h3>
+              <div class="summary-matrix">
+                <div class="summary-box">
+                  <span class="box-title">Core Fear</span>
+                  <p id="sum-core-fear">-</p>
+                </div>
+                <div class="summary-box">
+                  <span class="box-title">Core Desire</span>
+                  <p id="sum-core-desire">-</p>
+                </div>
+                <div class="summary-box">
+                  <span class="box-title">Core Weakness</span>
+                  <p id="sum-core-weakness">-</p>
+                </div>
+                <div class="summary-box">
+                  <span class="box-title">Soul Message</span>
+                  <p id="sum-soul-message">-</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- 'Your Enneagram Arrows' Card -->
+            <div class="report-section-card" id="report-arrows-card" style="display: none !important;">
+              <h3 class="report-section-header"><i data-lucide="git-branch"></i> Your Enneagram Arrows</h3>
+              <div class="arrows-content">
+                <div class="arrows-diagram-container" id="arrows-svg-container">
+                  <!-- Dynamic SVG diagram injected here -->
+                </div>
+                <div class="arrows-explanations">
+                  <div class="arrow-explanation-item growth">
+                    <span class="arrow-badge growth-badge"><i data-lucide="trending-up"></i> Growth Arrow</span>
+                    <p id="arrow-growth-text">-</p>
+                  </div>
+                  <div class="arrow-explanation-item stress">
+                    <span class="arrow-badge stress-badge"><i data-lucide="alert-triangle"></i> Stress Arrow</span>
+                    <p id="arrow-stress-text">-</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 'Your Wings' Card -->
+            <div class="report-section-card" id="report-wings-card" style="display: none !important;">
+              <h3 class="report-section-header"><i data-lucide="git-commit"></i> Your Wings</h3>
+              <div class="wings-content">
+                <div class="wings-diagram-container" id="wings-svg-container">
+                  <!-- Dynamic SVG diagram injected here -->
+                </div>
+                <div class="wings-explanation">
+                  <h4 id="wings-archetype-title">Dominant Wing Archetype</h4>
+                  <p id="wings-influence-text">-</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- 'What to Do Next' Card -->
+            <div class="report-section-card" id="report-next-steps-card" style="display: none !important;">
+              <h3 class="report-section-header"><i data-lucide="compass"></i> What to Do Next</h3>
+              <div class="next-steps-grid">
+                <div class="next-step-item">
+                  <div class="next-step-icon"><i data-lucide="user"></i></div>
+                  <div>
+                    <strong>Personal Growth</strong>
+                    <p id="next-personal-growth">-</p>
+                  </div>
+                </div>
+                <div class="next-step-item">
+                  <div class="next-step-icon"><i data-lucide="users"></i></div>
+                  <div>
+                    <strong>Relationships</strong>
+                    <p id="next-relationship">-</p>
+                  </div>
+                </div>
+                <div class="next-step-item">
+                  <div class="next-step-icon"><i data-lucide="briefcase"></i></div>
+                  <div>
+                    <strong>Career</strong>
+                    <p id="next-career">-</p>
+                  </div>
+                </div>
+                <div class="next-step-item">
+                  <div class="next-step-icon"><i data-lucide="heart"></i></div>
+                  <div>
+                    <strong>Stress Management</strong>
+                    <p id="next-stress-management">-</p>
+                  </div>
+                </div>
+                <div class="next-step-item">
+                  <div class="next-step-icon"><i data-lucide="calendar"></i></div>
+                  <div>
+                    <strong>Daily Habit</strong>
+                    <p id="next-daily-habit">-</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div> <!-- Close report-document -->
+
+          <!-- RIGHT SIDE: ANALYTICS & SIDEBAR (Hidden from UI but in DOM for JS chart initialization/responses review) -->
+          <div class="analytics-sidebar" style="display: none !important;">
+            
+            <!-- Chart Visualization Card -->
+            <div class="chart-card">
+              <div class="chart-header">
+                <h3>Type Distribution Analysis</h3>
+                <div class="chart-toggles">
+                  <button class="btn-toggle active" id="btn-chart-radar" title="Radar Chart">
+                    <i data-lucide="radar"></i> Radar
+                  </button>
+                  <button class="btn-toggle" id="btn-chart-bar" title="Bar Chart">
+                    <i data-lucide="bar-chart-3"></i> Bar
+                  </button>
+                </div>
+              </div>
+              <div class="chart-wrapper">
+                <canvas id="enneagramChart"></canvas>
+              </div>
+            </div>
+
+            <!-- All 9 Types Match Breakdown List -->
+            <div class="all-types-card">
+              <h3>Complete Type Similarity Match</h3>
+              <p class="info-text">Scores represent your rating alignment across each type (1-5 normalized to a percentage scale).</p>
+              <div class="types-bar-list" id="types-breakdown-list">
+                <!-- Grid items injected by JS -->
+              </div>
+            </div>
+
+            <!-- Question Details Accordion -->
+            <div class="answers-review-card">
+              <button class="accordion-header" id="btn-toggle-answers">
+                <span id="answers-accordion-title">Review Your Responses</span>
+                <i data-lucide="chevron-down" class="accordion-arrow"></i>
+              </button>
+              <div class="accordion-content" id="answers-accordion-content">
+                <div class="answers-list" id="answers-review-list">
+                  <!-- User responses injected here -->
+                </div>
+              </div>
+            </div>
+
+            <!-- Old Restart Action -->
+            <div class="sidebar-actions">
+              <button id="btn-restart-old" class="btn btn-outline w-full">
+                <i data-lucide="rotate-ccw"></i>
+                <span>Restart Assessment</span>
+              </button>
+            </div>
+
+          </div> <!-- Close analytics-sidebar -->
+        </div> <!-- Close results-layout -->
       </section>
 
     </main>
