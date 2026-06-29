@@ -442,6 +442,11 @@ function parseQuestionnaire() {
       // Clean prefix "Statement ***" if present
       text = text.replace(/^(Statement\s+\d+[\s.:-]*|\bStatement\b[\s.:-]*)/i, '').trim();
 
+      // Filter out non-Likert placeholder/scenario questions from library
+      if (text.includes('(scenario question)') || text.includes('(seek compromise')) {
+        continue;
+      }
+
       questionnaire[currentTypeNum].questions.push({
         originalNumber: originalNum,
         text: text
@@ -639,16 +644,16 @@ function generatePdfReport(dominantType, profile, scores, answers, outputPath) {
 
       // Draw Enneagram Arrows Diagram
       const typeNumInt = parseInt(dominantType, 10);
-      if (doc.y > 560) {
+      if (doc.y > 530) {
         doc.addPage();
       }
       doc.moveDown(0.5);
-      const cy1 = doc.y + 77;
-      drawPdfEnneagram(doc, 297, cy1, 65, typeNumInt, [], [
+      const cy1 = doc.y + 105;
+      drawPdfEnneagram(doc, 297, cy1, 90, typeNumInt, [], [
         { from: typeNumInt, to: profile.arrows.growth.type, color: '#10b981' },
         { from: typeNumInt, to: profile.arrows.stress.type, color: '#ef4444' }
       ], null);
-      doc.y = cy1 + 87; // move cursor below diagram
+      doc.y = cy1 + 100; // move cursor below diagram
       doc.moveDown(1.5);
 
       // Wings Section
@@ -675,13 +680,13 @@ function generatePdfReport(dominantType, profile, scores, answers, outputPath) {
       doc.moveDown(1.0);
 
       // Draw Enneagram Wings Diagram
-      if (doc.y > 560) {
+      if (doc.y > 530) {
         doc.addPage();
       }
       doc.moveDown(0.5);
-      const cy2 = doc.y + 77;
-      drawPdfEnneagram(doc, 297, cy2, 65, typeNumInt, [wing1, wing2], [], dominantWing);
-      doc.y = cy2 + 87; // move cursor below diagram
+      const cy2 = doc.y + 105;
+      drawPdfEnneagram(doc, 297, cy2, 90, typeNumInt, [wing1, wing2], [], dominantWing);
+      doc.y = cy2 + 100; // move cursor below diagram
       doc.moveDown(1.5);
 
       // Next Steps Section

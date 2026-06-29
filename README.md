@@ -6,10 +6,10 @@ A premium, interactive single-page HTML/JS dashboard that implements a multi-sta
 - **Aesthetic Glassmorphism Design**: Features smooth neon background gradients, dark/light theme switching, responsive layouts, and interactive micro-animations.
 - **Dynamic File Parsing**: Reads `Enneagram_Questionnaire_By_Type.md` directly via the backend API or falls back to client-side parsing.
 - **Multi-Stage Adaptive Testing**:
-  1. **Stage 1 (Baseline)**: Prompts user with 36 questions (exactly 4 random questions per Enneagram type). Questions are cleaned of prefixes (like "Statement") and re-numbered sequentially from 1 to 36.
+  1. **Stage 1 (Baseline)**: Prompts user with 37 questions (exactly 4 random questions per Enneagram type plus the hardcoded culinary motivation scenario question). Questions are cleaned of prefixes (like "Statement") and re-numbered sequentially.
   2. **Stage 2 (Adaptive Injection)**: Identifies the highest-scoring Enneagram type(s) from the baseline. If there is a tie, all tied types are selected.
-  3. **Stage 3 (Deep Dive)**: Dynamically injects 5 additional sequential, consecutive questions exclusive to the top-scoring type(s) that were not asked in the baseline.
-  4. **Stage 4 (Recalculation)**: Recalculates final scores using all answered questions. Non-top types are scored from 4 answers, while top types are scored from 4 baseline + deep dive answers. Scores are normalized to an average 1.0–5.0 scale for a fair comparison.
+  3. **Stage 3 (Deep Dive)**: Dynamically injects exactly 15 additional sequential, consecutive questions exclusive to the top-scoring tied type(s) that were not asked in the baseline.
+  4. **Stage 4 (Recalculation)**: Recalculates final scores using all answered questions. Non-top types are scored from baseline answers, while top types are scored from baseline + deep dive answers. Scores are normalized to an average 1.0–5.0 scale for a fair comparison.
   5. **Stage 5 (Analytics & Reporting)**: Visualizes results using interactive Chart.js charts (toggleable Radar or Bar) and progress bars. Provides a textbox to email a comprehensive HTML report, falling back to local file saving.
 
 ## Getting Started
