@@ -16,22 +16,6 @@ const state = {
   lastGeneratedReportHtml: null // Cached report html for local download
 };
 
-// Hardcoded Culinary Motivation Scenario Question
-const SCENARIO_QUESTION = {
-  originalNumber: 999,
-  text: "Taste and Flavors Motivation: Select the statement that best describes your relationship with food, culinary experiences, and tastes:",
-  options: [
-    { value: 'A', type: 1, label: "A. I seek culinary perfection, clean ingredients, and balanced flavors prepared exactly right." },
-    { value: 'B', type: 2, label: "B. I enjoy sharing delicious food that brings people together and makes others feel nurtured and cared for." },
-    { value: 'C', type: 3, label: "C. I appreciate high-presentation, trendy, or award-winning dishes that showcase culinary excellence and success." },
-    { value: 'D', type: 4, label: "D. I crave unique, rare, and deeply expressive flavors that evoke authentic emotions and individual memories." },
-    { value: 'E', type: 5, label: "E. I prefer to understand the origin, history, chemistry, and complex preparation methods of the dishes I consume." },
-    { value: 'F', type: 6, label: "F. I stick to familiar, comforting recipes and trusted ingredients that guarantee a safe, reliable, and consistent dining experience." },
-    { value: 'G', type: 7, label: "G. I love trying exotic, adventurous, and brand new foods in exciting, diverse combinations just for the fun of it." },
-    { value: 'H', type: 8, label: "H. I desire rich, bold, intense, and hearty dishes that give me energy and a strong feeling of satisfaction." },
-    { value: 'I', type: 9, label: "I. I prefer simple, peaceful, and comforting meals that create harmony and ease, enjoying whatever is served without fuss." }
-  ]
-};
 
 // Enneagram Type Profiles for instant frontend rendering
 const TYPE_PROFILES = {
@@ -693,14 +677,6 @@ function startAssessment() {
     }
   }
 
-  // Inject the new taste and flavors motivation scenario question directly as a hardcoded core baseline item
-  state.baselineQuestions.push({
-    originalNumber: SCENARIO_QUESTION.originalNumber,
-    text: SCENARIO_QUESTION.text,
-    typeNumber: null,
-    isScenario: true,
-    options: SCENARIO_QUESTION.options
-  });
 
   // Shuffle baseline questions to mix up types
   shuffleArray(state.baselineQuestions);
@@ -905,8 +881,8 @@ function renderDeepDiveQuestions() {
   const q = state.deepDiveQuestions[index];
   if (!q) return;
 
-  // Number them from 37 onwards
-  const card = createQuestionCard(q, index + 37, 'deepdive');
+  // Number them sequentially after baseline questions
+  const card = createQuestionCard(q, index + state.baselineQuestions.length + 1, 'deepdive');
   container.innerHTML = card;
 
   // Trigger slide-in entry animation
@@ -983,36 +959,7 @@ function createQuestionCard(question, sequentialNumber, namePrefix) {
   // Set checked state if already answered (e.g. on return or state change)
   const currentVal = state.answers[question.originalNumber] || null;
 
-  if (question.originalNumber === 999) {
-    return `
-      <div class="question-card scenario-card" id="q-card-999">
-        <div class="question-header">
-          <div class="q-number">${sequentialNumber}</div>
-          <div class="q-text">${question.text}</div>
-        </div>
-        <div class="scenario-options">
-          ${question.options.map(opt => {
-            const checkedStr = currentVal === opt.value ? 'checked' : '';
-            return `
-              <div class="scenario-option">
-                <input type="radio" 
-                       id="radio-scenario-${opt.value}" 
-                       name="q-999" 
-                       value="${opt.value}"
-                       data-qnum="999"
-                       ${checkedStr}
-                       required>
-                <label for="radio-scenario-${opt.value}" class="scenario-label">
-                  <span class="option-letter">${opt.value}</span>
-                  <span class="option-desc">${opt.label}</span>
-                </label>
-              </div>
-            `;
-          }).join('')}
-        </div>
-      </div>
-    `;
-  }
+
 
   return `
     <div class="question-card" id="q-card-${question.originalNumber}">
@@ -1407,17 +1354,15 @@ function calculateScores(enhanced = true) {
     ratingCounts[t] = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
   }
 
-  // Iterate over all answered baseline and deep dive questions (except the scenario question 999 first)
+  // Iterate over all answered baseline and deep dive questions
   const allAskedQuestions = [...state.baselineQuestions, ...state.deepDiveQuestions];
   
   allAskedQuestions.forEach(q => {
-    if (q.originalNumber !== 999) {
-      const rating = state.answers[q.originalNumber];
-      if (rating !== undefined) {
-        typeSums[q.typeNumber] += rating;
-        typeCounts[q.typeNumber] += 1;
-        ratingCounts[q.typeNumber][rating] += 1;
-      }
+    const rating = state.answers[q.originalNumber];
+    if (rating !== undefined) {
+      typeSums[q.typeNumber] += rating;
+      typeCounts[q.typeNumber] += 1;
+      ratingCounts[q.typeNumber][rating] += 1;
     }
   });
 
@@ -1425,21 +1370,6 @@ function calculateScores(enhanced = true) {
   const rawAverages = {};
   for (let t = 1; t <= 9; t++) {
     rawAverages[t] = typeCounts[t] > 0 ? (typeSums[t] / typeCounts[t]) : 0;
-  }
-
-  // Inject the scenario question score exclusively to its corresponding Enneagram type
-  const scenarioRating = state.answers[999];
-  if (scenarioRating !== undefined) {
-    const selectedType = scenarioRating.charCodeAt(0) - 'A'.charCodeAt(0) + 1;
-    if (selectedType >= 1 && selectedType <= 9) {
-      const weight = 2.0; // Heavily weighted factor exclusively applied
-      typeSums[selectedType] += 5.0 * weight;
-      typeCounts[selectedType] += weight;
-      ratingCounts[selectedType][5] += weight;
-      
-      // Update rawAverage for the selected type
-      rawAverages[selectedType] = typeSums[selectedType] / typeCounts[selectedType];
-    }
   }
 
   if (!enhanced) {
@@ -1611,11 +1541,10 @@ function renderResults() {
   // Sort questions by original order
   allAskedQuestions.forEach((q, idx) => {
     const rating = state.answers[q.originalNumber];
-    const isScenario = q.originalNumber === 999;
-    const typeProfile = isScenario ? { title: 'Culinary Motivation' } : (TYPE_PROFILES[q.typeNumber] || { title: `Type ${q.typeNumber}` });
-    const categoryText = isScenario ? 'Culinary Motivation Scenario' : `Type ${q.typeNumber} (${typeProfile.title})`;
-    const ratingText = isScenario ? `Option ${rating}` : `Rating: ${rating} / 5 (${getLikertLabel(rating)})`;
-    const ratingClass = isScenario ? 'score-scenario' : `score-${rating}`;
+    const typeProfile = TYPE_PROFILES[q.typeNumber] || { title: `Type ${q.typeNumber}` };
+    const categoryText = `Type ${q.typeNumber} (${typeProfile.title})`;
+    const ratingText = `Rating: ${rating} / 5 (${getLikertLabel(rating)})`;
+    const ratingClass = `score-${rating}`;
     
     answersListContainer.innerHTML += `
       <div class="ans-item">
@@ -1961,10 +1890,9 @@ function downloadLocalReport() {
     const answersList = allAskedQuestions
       .map((ans, idx) => {
         const rating = state.answers[ans.originalNumber];
-        const isScenario = ans.originalNumber === 999;
-        const typeProfile = isScenario ? { title: 'Culinary Motivation' } : (TYPE_PROFILES[ans.typeNumber] || { title: `Type ${ans.typeNumber}` });
-        const categoryText = isScenario ? 'Culinary Motivation Scenario' : `Type ${ans.typeNumber} (${typeProfile.title})`;
-        const ratingText = isScenario ? `Option ${rating}` : `${rating} / 5`;
+        const typeProfile = TYPE_PROFILES[ans.typeNumber] || { title: `Type ${ans.typeNumber}` };
+        const categoryText = `Type ${ans.typeNumber} (${typeProfile.title})`;
+        const ratingText = `${rating} / 5`;
         return `
           <div style="padding: 10px; border-bottom: 1px solid #edf2f7; margin-bottom: 5px;">
             <p style="margin: 0; font-size: 14px; color: #4a5568;"><strong>Q${idx + 1}:</strong> ${ans.text}</p>
